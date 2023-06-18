@@ -1,5 +1,6 @@
 import yt_dlp
 import os
+import survey
 
 
 # Remove local characters from string
@@ -18,11 +19,11 @@ def remove_local_characters(string):
 
 
 # Dowload video in flac format
-def download(link):
+def download(link, format):
     # get current working directory
     cwd = os.getcwd()
-
-    # Check if music folder exists
+    print("Exporting as: " + format)
+    # Check if audio folder exists
     if not os.path.exists(cwd + "/audio"):
         # Create audio folder
         os.makedirs("audio")
@@ -34,10 +35,19 @@ def download(link):
     ):
         print("File already exists")
         return
+    # Check with yt-dlp -F command if format is available
+    stream = os.popen("yt-dlp -F " + link)
+    output = stream.read()
+    # Check if format is available
+    if format not in output:
+        print("Format not available")
+        format = "bestaudio"
 
     stream = os.popen(
         "yt-dlp "
-        + " -x -f bestaudio "
+        + " -x -f "
+        + format
+        + " "
         + link
         + " -o "
         + "audio/"
@@ -84,27 +94,43 @@ if __name__ == "__main__":
     #     "https://www.youtube.com/watch?v=U1NuDWfynbY&list=RDMMU1NuDWfynbY&start_radio=1"
     # )
 
-    # # Get all videos from playlist
-    playlist = yt_dlp.YoutubeDL().extract_info(
-        "https://www.youtube.com/watch?v=U1NuDWfynbY&list=RDMMU1NuDWfynbY&start_radio=1",
-        download=False,
-    )["entries"]
+    inputType = ("list", "individual")
+    inputTypeIndex = survey.routines.select("List or individual?: ", options=inputType)
+    print(f"Answered {inputTypeIndex}.")
 
-    # # Print all videos from playlist
-    for video in playlist:
-        print(video["title"])
-        download(video["webpage_url"])
+    link = survey.routines.input("link? ")
+    print(f"Answered {link}.")
 
-    # )
+    format = ("bestaudio", "flac", "mp3", "aac", "m4a", "opus", "vorbis", "wav")
+    formatIndex = survey.routines.select("List or individual?: ", options=format)
+    print(f"Answered {formatIndex}.")
 
-    # Convert all files in audio folder to mp3
-    stream = os.popen('WebmToMp3.py --webm_path "./audio"')
-    output = stream.read()
-    print(output)
+    if inputTypeIndex == 0:
+        # # Get all videos from playlist
+        playlist = yt_dlp.YoutubeDL().extract_info(
+            link,
+            download=False,
+        )["entries"]
 
-    # Delete all files in audio folder with extesion webm if there is another file with the same name but with mp3 extension
-    for file in os.listdir("./audio"):
-        if file.endswith(".webm"):
-            if os.path.exists("./audio/" + file.split(".")[0] + ".mp3"):
-                os.remove("./audio/" + file)
-                print("Removed: " + file)
+        # # Print all videos from playlist
+        for video in playlist:
+            print(video["title"])
+            download(video["webpage_url"], format[formatIndex])
+    else:
+        download(link, format[index])
+
+    convertToMP3 = survey.routines.inquire("Convert to MP3? ", default=True)
+    print(f"Answered {convertToMP3}.")
+
+    if convertToMP3:
+        # Convert all files in audio folder to mp3
+        stream = os.popen('WebmToMp3.py --webm_path "./audio"')
+        output = stream.read()
+        print(output)
+
+        # Delete all files in audio folder with extesion webm if there is another file with the same name but with mp3 extension
+        for file in os.listdir("./audio"):
+            if file.endswith(".webm"):
+                if os.path.exists("./audio/" + file.split(".")[0] + ".mp3"):
+                    os.remove("./audio/" + file)
+                    print("Removed: " + file)
