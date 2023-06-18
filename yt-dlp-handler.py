@@ -23,14 +23,14 @@ def download(link):
     cwd = os.getcwd()
 
     # Check if music folder exists
-    if not os.path.exists(cwd + "/music"):
-        # Create music folder
-        os.makedirs("music")
+    if not os.path.exists(cwd + "/audio"):
+        # Create audio folder
+        os.makedirs("audio")
 
     # Download video
-    # Check if video already exists in music folder with any extension
+    # Check if video already exists in audio folder with any extension
     if os.path.exists(
-        cwd + "/music/" + remove_local_characters(get_title(link)) + ".*"
+        cwd + "/audio/" + remove_local_characters(get_title(link)) + ".*"
     ):
         print("File already exists")
         return
@@ -40,7 +40,7 @@ def download(link):
         + " -x -f bestaudio "
         + link
         + " -o "
-        + "music/"
+        + "audio/"
         + remove_local_characters("%(title)s")
         + ".%(ext)s"
     )
@@ -97,14 +97,14 @@ if __name__ == "__main__":
 
     # )
 
-    # Convert all files in music folder to mp3
-    stream = os.popen('WebmToMp3.py --webm_path "./music"')
+    # Convert all files in audio folder to mp3
+    stream = os.popen('WebmToMp3.py --webm_path "./audio"')
     output = stream.read()
     print(output)
 
-    # Delete all files in music folder with extesion webm if there is another file with the same name but with mp3 extension
-    for file in os.listdir("./music"):
+    # Delete all files in audio folder with extesion webm if there is another file with the same name but with mp3 extension
+    for file in os.listdir("./audio"):
         if file.endswith(".webm"):
-            if os.path.exists("./music/" + file.split(".")[0] + ".mp3"):
-                os.remove("./music/" + file)
+            if os.path.exists("./audio/" + file.split(".")[0] + ".mp3"):
+                os.remove("./audio/" + file)
                 print("Removed: " + file)
